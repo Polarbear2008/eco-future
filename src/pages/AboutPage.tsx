@@ -3,6 +3,7 @@ import CTA from "@/components/home/CTA";
 import { useTeam } from "@/contexts/TeamContext";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import OptimizedImage from "@/components/common/OptimizedImage";
 
 const AboutPage = () => {
   const { teamMembers, isLoading } = useTeam();
@@ -197,15 +198,12 @@ const AboutPage = () => {
                           className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
                         >
                           <div className="aspect-square overflow-hidden">
-                            <img
+                            <OptimizedImage
                               src={member.image}
                               alt={member.name}
                               className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                              onError={(e) => {
-                                console.error(`Failed to load image: ${member.image}`);
-                                // Fallback to logo if image fails to load
-                                (e.target as HTMLImageElement).src = "/logo.png";
-                              }}
+                              fallbackSrc="/logo.png"
+                              width={300}
                             />
                           </div>
                           <div className="p-6">
