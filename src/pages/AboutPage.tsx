@@ -1,43 +1,50 @@
-import { Award, Calendar, Heart, Check, User, Linkedin, Twitter, Mail } from "lucide-react";
+import { Award, Calendar, Heart, Check, User, Linkedin, Twitter, Mail, Search } from "lucide-react";
 import CTA from "@/components/home/CTA";
 import { useTeam } from "@/contexts/TeamContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const AboutPage = () => {
   const { teamMembers, isLoading } = useTeam();
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filteredMembers, setFilteredMembers] = useState(teamMembers);
 
+  // Get unique categories from team members
+  const categories = ["All", ...Array.from(new Set(teamMembers.map(member => member.category)))];
+
+  // Filter team members whenever selection or search changes
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    let result = teamMembers;
+    
+    // Filter by category if not "All"
+    if (selectedCategory !== "All") {
+      result = result.filter(member => member.category === selectedCategory);
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        member => 
+          member.name.toLowerCase().includes(query) || 
+          member.role.toLowerCase().includes(query) ||
+          member.bio.toLowerCase().includes(query)
+      );
+    }
+    
+    setFilteredMembers(result);
+  }, [teamMembers, selectedCategory, searchQuery]);
 
-  const timeline = [
-    {
-      year: "February 20, 2025",
-      title: "Club Inception",
-      description: "The idea for EcoFuture was born, with a vision to create positive environmental change through community action."
-    },
-    {
-      year: "February 27, 2025",
-      title: "Team Formation",
-      description: "The full EcoFuture team was created, bringing together passionate individuals dedicated to environmental sustainability."
-    },
-    {
-      year: "February 28, 2025",
-      title: "First Team Meeting",
-      description: "Our first official team meeting marked the beginning of our collaborative journey toward environmental impact."
-    },
-    {
-      year: "March 2025",
-      title: "Initial Projects",
-      description: "Launched our first environmental initiatives and began building our community presence."
-    },
-    {
-      year: "March 29, 2025",
-      title: "Digital Presence",
-      description: "Established our online platform to reach a wider audience and share our environmental mission."
-    },
-  ];
+  // Group filtered members by category
+  const groupedMembers = filteredMembers.reduce((groups, member) => {
+    const category = member.category;
+    if (!groups[category]) {
+      groups[category] = [];
+    }
+    groups[category].push(member);
+    return groups;
+  }, {} as Record<string, typeof teamMembers>);
 
   return (
     <div className="overflow-hidden">
@@ -162,7 +169,7 @@ const AboutPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-3xl font-bold mb-12 text-center text-gray-900"
+            className="text-3xl font-bold mb-6 text-center text-gray-900"
           >
             Meet Our Team
           </motion.h2>
@@ -172,23 +179,82 @@ const AboutPage = () => {
               <p className="text-lg text-gray-600">Loading team members...</p>
             </div>
           ) : (
-            <div className="space-y-16">
-              {/* Group team members by category */}
-              {Array.from(new Set(teamMembers.map(member => member.category))).map((category, categoryIndex) => (
-                <div key={category} className="mb-12">
-                  <motion.h3
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 * categoryIndex }}
-                    className="text-2xl font-bold mb-8 text-center text-gray-800 border-b-2 border-green-500 pb-2 max-w-xs mx-auto"
-                  >
-                    {category}
-                  </motion.h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {teamMembers
-                      .filter(member => member.category === category)
-                      .map((member, index) => (
+            <>
+              {/* Filters */}
+              <div className="mb-12 bg-white rounded-lg shadow-md p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  {/* Category Filter */}
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                          selectedCategory === category
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Search className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search team members..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 w-full md:w-64"
+                    />
+                  </div>
+                </div>
+
+                {/* Results summary */}
+                <div className="mt-4 text-sm text-gray-600">
+                  Showing {filteredMembers.length} of {teamMembers.length} team members
+                  {selectedCategory !== "All" && ` in ${selectedCategory}`}
+                  {searchQuery && ` matching "${searchQuery}"`}
+                </div>
+              </div>
+
+              {/* Display team members */}
+              <div className="space-y-16">
+                {/* If no results */}
+                {Object.keys(groupedMembers).length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-lg text-gray-600">No team members found matching your criteria.</p>
+                    <button 
+                      onClick={() => {
+                        setSelectedCategory("All");
+                        setSearchQuery("");
+                      }}
+                      className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                )}
+
+                {/* Group team members by category */}
+                {Object.entries(groupedMembers).map(([category, members], categoryIndex) => (
+                  <div key={category} className="mb-12">
+                    <motion.h3
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 * categoryIndex }}
+                      className="text-2xl font-bold mb-8 text-center text-gray-800 border-b-2 border-green-500 pb-2 max-w-xs mx-auto"
+                    >
+                      {category}
+                    </motion.h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                      {members.map((member, index) => (
                         <motion.div
                           key={member.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -196,15 +262,25 @@ const AboutPage = () => {
                           transition={{ duration: 0.5, delay: 0.1 * index }}
                           className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
                         >
-                          <div className="aspect-square overflow-hidden">
+                          <div className="aspect-square overflow-hidden bg-gray-50 flex items-center justify-center">
                             <img
                               src={member.image}
                               alt={member.name}
-                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                              className="w-full h-full object-cover"
+                              style={{ 
+                                objectFit: "cover", 
+                                objectPosition: "center 30%",
+                                maxHeight: "100%",
+                                maxWidth: "100%"
+                              }}
                               onError={(e) => {
                                 console.error(`Failed to load image: ${member.image}`);
                                 // Fallback to logo if image fails to load
-                                (e.target as HTMLImageElement).src = "/logo.png";
+                                (e.target as HTMLImageElement).src = `${window.location.origin}/logo.png`;
+                                // Add a class to improve the logo display
+                                (e.target as HTMLImageElement).classList.remove("object-cover");
+                                (e.target as HTMLImageElement).classList.add("p-4", "object-contain");
+                                (e.target as HTMLImageElement).style.objectPosition = "center";
                               }}
                             />
                           </div>
@@ -217,10 +293,11 @@ const AboutPage = () => {
                           </div>
                         </motion.div>
                       ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </section>
@@ -239,7 +316,33 @@ const AboutPage = () => {
             <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-eco-green"></div>
             
             {/* Timeline items */}
-            {timeline.map((item, index) => (
+            {[
+              {
+                year: "February 20, 2025",
+                title: "Club Inception",
+                description: "The idea for EcoFuture was born, with a vision to create positive environmental change through community action."
+              },
+              {
+                year: "February 27, 2025",
+                title: "Team Formation",
+                description: "The full EcoFuture team was created, bringing together passionate individuals dedicated to environmental sustainability."
+              },
+              {
+                year: "February 28, 2025",
+                title: "First Team Meeting",
+                description: "Our first official team meeting marked the beginning of our collaborative journey toward environmental impact."
+              },
+              {
+                year: "March 2025",
+                title: "Initial Projects",
+                description: "Launched our first environmental initiatives and began building our community presence."
+              },
+              {
+                year: "March 29, 2025",
+                title: "Digital Presence",
+                description: "Established our online platform to reach a wider audience and share our environmental mission."
+              },
+            ].map((item, index) => (
               <div key={index} className="mb-12 relative">
                 <div className="md:flex items-center">
                   <div className={`md:w-1/2 ${index % 2 === 0 ? 'md:pr-16 md:text-right' : 'md:pl-16 md:ml-auto'}`}>

@@ -7,14 +7,18 @@ import {
   Users, 
   FolderKanban, 
   TrendingUp, 
-  Calendar 
+  Calendar,
+  LogOut
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAdmin } from "@/contexts/AdminContext";
+import { useAuth } from "@/contexts/AuthContext";
+import LogoutButton from "@/components/LogoutButton";
 
 const AdminDashboardPage = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const admin = useAdmin();
+  const { isAuthenticated } = useAuth();
   const stats = admin.getDashboardStats();
 
   // Generate stats cards data
@@ -156,111 +160,126 @@ const AdminDashboardPage = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <div className="flex items-center mt-2 md:mt-0 text-sm text-gray-500">
-            <Calendar className="h-4 w-4 mr-1" />
-            {currentTime.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+            <p className="text-gray-600">Welcome to the EcoFuture administration panel</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="bg-green-100 px-4 py-2 rounded-md text-green-800">
+              <span className="font-medium">Authenticated: </span>
+              {isAuthenticated ? 'Yes' : 'No'}
+            </div>
+            <LogoutButton />
           </div>
         </div>
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <div className="flex items-center mt-2 md:mt-0 text-sm text-gray-500">
+              <Calendar className="h-4 w-4 mr-1" />
+              {currentTime.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </div>
+          </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {statsCards.map((stat) => (
-            <Link to={stat.path} key={stat.name}>
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">{stat.name}</p>
-                      <p className="text-3xl font-bold mt-1">{stat.value}</p>
-                    </div>
-                    <div className={`p-3 rounded-full ${stat.color}`}>
-                      <stat.icon className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Activity */}
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start">
-                    <div className={`p-2 rounded-full mr-4 ${
-                      activity.type === 'blog' ? 'bg-blue-100 text-blue-600' :
-                      activity.type === 'volunteer' ? 'bg-amber-100 text-amber-600' :
-                      'bg-green-100 text-green-600'
-                    }`}>
-                      {activity.type === 'blog' ? <FileText className="h-5 w-5" /> :
-                       activity.type === 'volunteer' ? <Users className="h-5 w-5" /> :
-                       <FolderKanban className="h-5 w-5" />}
-                    </div>
-                    <div>
-                      <div className="flex items-center">
-                        <p className="font-medium text-gray-900">
-                          {activity.type === 'blog' ? activity.title :
-                           activity.type === 'volunteer' ? activity.name :
-                           activity.title}
-                        </p>
-                        <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                          {activity.type === 'blog' ? 'Blog Post' :
-                           activity.type === 'volunteer' ? 'Volunteer' :
-                           'Project'}
-                        </span>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {statsCards.map((stat) => (
+              <Link to={stat.path} key={stat.name}>
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">{stat.name}</p>
+                        <p className="text-3xl font-bold mt-1">{stat.value}</p>
                       </div>
-                      <p className="text-sm text-gray-500 mt-0.5">
-                        {activity.type === 'volunteer' ? `Applied as ${activity.role}` :
-                         activity.type === 'project' ? `Status: ${activity.status}` :
-                         'New post published'}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">{getRelativeTime(activity.date)}</p>
+                      <div className={`p-3 rounded-full ${stat.color}`}>
+                        <stat.icon className="h-6 w-6 text-white" />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
 
-          {/* Upcoming Events */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl">Upcoming Events</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {upcomingEvents.map((event) => (
-                  <div key={event.id} className="border-b border-gray-100 last:border-0 pb-4 last:pb-0">
-                    <h3 className="font-medium text-gray-900">{event.title}</h3>
-                    <div className="flex items-center mt-1 text-sm text-gray-500">
-                      <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                      {new Date(event.date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit'
-                      })}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Recent Activity */}
+            <Card className="lg:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-start">
+                      <div className={`p-2 rounded-full mr-4 ${
+                        activity.type === 'blog' ? 'bg-blue-100 text-blue-600' :
+                        activity.type === 'volunteer' ? 'bg-amber-100 text-amber-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        {activity.type === 'blog' ? <FileText className="h-5 w-5" /> :
+                         activity.type === 'volunteer' ? <Users className="h-5 w-5" /> :
+                         <FolderKanban className="h-5 w-5" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center">
+                          <p className="font-medium text-gray-900">
+                            {activity.type === 'blog' ? activity.title :
+                             activity.type === 'volunteer' ? activity.name :
+                             activity.title}
+                          </p>
+                          <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                            {activity.type === 'blog' ? 'Blog Post' :
+                             activity.type === 'volunteer' ? 'Volunteer' :
+                             'Project'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-0.5">
+                          {activity.type === 'volunteer' ? `Applied as ${activity.role}` :
+                           activity.type === 'project' ? `Status: ${activity.status}` :
+                           'New post published'}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">{getRelativeTime(activity.date)}</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">{event.location}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Events */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Upcoming Events</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {upcomingEvents.map((event) => (
+                    <div key={event.id} className="border-b border-gray-100 last:border-0 pb-4 last:pb-0">
+                      <h3 className="font-medium text-gray-900">{event.title}</h3>
+                      <div className="flex items-center mt-1 text-sm text-gray-500">
+                        <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                        {new Date(event.date).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">{event.location}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </AdminLayout>

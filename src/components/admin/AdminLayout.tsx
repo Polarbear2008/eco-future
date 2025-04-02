@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { Link, useLocation, Navigate } from "react-router-dom";
+import { Link, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -13,13 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-// Mock authentication - in a real app, use a proper auth system
-const useAuth = () => {
-  // For demo purposes, we'll assume the user is logged in
-  // In a real app, this would check for a valid session
-  return { isAuthenticated: true };
-};
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -28,12 +22,18 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
 
   // If not authenticated, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" />;
+    return <Navigate to="/login" />;
   }
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -95,17 +95,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             );
           })}
         </nav>
-        <div className="absolute bottom-0 w-full p-4 border-t">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start text-gray-700 hover:text-red-600"
-            asChild
+        
+        {/* Logout button at the bottom of sidebar */}
+        <div className="mt-auto pt-4 border-t border-gray-200">
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md"
           >
-            <Link to="/">
-              <LogOut className="mr-3 h-5 w-5" />
-              Back to Site
-            </Link>
-          </Button>
+            <LogOut className="mr-3 h-5 w-5" />
+            Logout
+          </button>
         </div>
       </div>
 

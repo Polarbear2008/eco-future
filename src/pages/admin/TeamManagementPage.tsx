@@ -5,11 +5,28 @@ import { toast } from "@/components/ui/use-toast";
 import TeamPhotoUploader from "@/components/admin/TeamPhotoUploader";
 import { useTeam, TeamMember } from "@/contexts/TeamContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Info, Search, Filter, SortAsc, SortDesc } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 const TeamManagementPage = () => {
   const { teamMembers, updateTeamMemberPhoto, isLoading } = useTeam();
   const [loading, setLoading] = useState(true);
+  const [filteredMembers, setFilteredMembers] = useState<TeamMember[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Get unique categories
+  const categories = ["All", ...Array.from(new Set(teamMembers.map(member => member.category)))];
 
   useEffect(() => {
     // Just a small delay to simulate loading
@@ -19,6 +36,58 @@ const TeamManagementPage = () => {
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Filter and sort team members
+  useEffect(() => {
+    let result = [...teamMembers];
+    
+    // Filter by category
+    if (selectedCategory !== "All") {
+      result = result.filter(member => member.category === selectedCategory);
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        member => 
+          member.name.toLowerCase().includes(query) || 
+          member.role.toLowerCase().includes(query) ||
+          (member.bio && member.bio.toLowerCase().includes(query))
+      );
+    }
+    
+    // Sort members
+    result.sort((a, b) => {
+      let valueA, valueB;
+      
+      switch (sortBy) {
+        case "name":
+          valueA = a.name;
+          valueB = b.name;
+          break;
+        case "role":
+          valueA = a.role;
+          valueB = b.role;
+          break;
+        case "category":
+          valueA = a.category;
+          valueB = b.category;
+          break;
+        default:
+          valueA = a.name;
+          valueB = b.name;
+      }
+      
+      if (sortDirection === "asc") {
+        return valueA.localeCompare(valueB);
+      } else {
+        return valueB.localeCompare(valueA);
+      }
+    });
+    
+    setFilteredMembers(result);
+  }, [teamMembers, selectedCategory, searchQuery, sortBy, sortDirection]);
 
   const handlePhotoUpdate = (memberId: number, newImageUrl: string) => {
     // Use the context method to update the photo
@@ -49,51 +118,156 @@ const TeamManagementPage = () => {
     }
   };
 
-  if (loading || isLoading) {
-    return (
-      <AdminLayout>
-        <div className="p-6">
-          <h1 className="text-2xl font-bold mb-6">Team Management</h1>
-          <p>Loading team members...</p>
-        </div>
-      </AdminLayout>
-    );
-  }
+  const toggleSortDirection = () => {
+    setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+  };
 
   return (
     <AdminLayout>
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-6">Team Management</h1>
-        
-        <Alert className="mb-6 bg-blue-50 border-blue-200">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Team Management</h1>
+            <p className="text-gray-600">Update team member photos and information</p>
+          </div>
+          <Button onClick={handleSaveChanges} className="bg-eco-green hover:bg-green-700">
+            Save All Changes
+          </Button>
+        </div>
+
+        <Alert className="mb-6">
           <Info className="h-4 w-4" />
-          <AlertTitle>Important: Manual Image Copying Required</AlertTitle>
+          <AlertTitle>Team Photo Management</AlertTitle>
           <AlertDescription>
-            <p className="mb-2">
-              Due to browser security restrictions, you need to manually copy the selected images to the public folder:
-            </p>
-            <ol className="list-decimal pl-5 space-y-1">
-              <li>After selecting an image, note the filename shown in the success message</li>
-              <li>Copy the image file to: <code className="bg-gray-100 px-1 py-0.5 rounded">public/images/team/</code> folder</li>
-              <li>Ensure the filename matches exactly what was shown in the success message</li>
-              <li>Click "Save Changes" below when all images are copied</li>
-            </ol>
+            Upload photos for team members. Images will be automatically resized and optimized.
+            For best results, use square images with a minimum size of 300x300 pixels.
           </AlertDescription>
         </Alert>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-          {teamMembers.map((member) => (
-            <TeamPhotoUploader
-              key={member.id}
-              teamMember={member}
-              onPhotoUpdate={handlePhotoUpdate}
-            />
-          ))}
+
+        {/* Filters and search */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              <div className="flex items-center">
+                <Filter className="h-4 w-4 mr-2 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Filter:</span>
+              </div>
+              
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              <div className="flex items-center">
+                {sortDirection === "asc" ? (
+                  <SortAsc className="h-4 w-4 mr-2 text-gray-500" />
+                ) : (
+                  <SortDesc className="h-4 w-4 mr-2 text-gray-500" />
+                )}
+                <span className="text-sm font-medium text-gray-700">Sort by:</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="role">Role</SelectItem>
+                    <SelectItem value="category">Category</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={toggleSortDirection}
+                  className="h-10 w-10"
+                >
+                  {sortDirection === "asc" ? (
+                    <SortAsc className="h-4 w-4" />
+                  ) : (
+                    <SortDesc className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative w-full md:w-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search team members..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-full md:w-[250px]"
+              />
+            </div>
+          </div>
+          
+          {/* Results summary */}
+          <div className="mt-3 text-sm text-gray-600">
+            Showing {filteredMembers.length} of {teamMembers.length} team members
+            {selectedCategory !== "All" && (
+              <Badge variant="outline" className="ml-2 bg-green-50">
+                {selectedCategory}
+              </Badge>
+            )}
+          </div>
         </div>
-        
-        <Button onClick={handleSaveChanges} className="w-full md:w-auto">
-          Save Changes
-        </Button>
+
+        {loading || isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-lg text-gray-600">Loading team members...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMembers.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-lg text-gray-600">No team members found matching your criteria.</p>
+                <Button 
+                  onClick={() => {
+                    setSelectedCategory("All");
+                    setSearchQuery("");
+                  }}
+                  variant="outline"
+                  className="mt-4"
+                >
+                  Reset Filters
+                </Button>
+              </div>
+            ) : (
+              filteredMembers.map((member) => (
+                <div key={member.id} className="bg-white rounded-lg shadow overflow-hidden">
+                  <div className="p-4 border-b">
+                    <h3 className="font-medium text-lg">{member.name}</h3>
+                    <p className="text-gray-600">{member.role}</p>
+                    <Badge className="mt-2 bg-green-100 text-green-800 hover:bg-green-200">
+                      {member.category}
+                    </Badge>
+                  </div>
+                  <div className="p-4">
+                    <TeamPhotoUploader 
+                      memberId={member.id} 
+                      currentImage={member.image} 
+                      onPhotoUpdate={handlePhotoUpdate}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

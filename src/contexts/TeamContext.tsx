@@ -16,75 +16,149 @@ interface TeamContextType {
   isLoading: boolean;
 }
 
-// Helper function to encode image paths
-const encodeImagePath = (path: string): string => {
-  // Split the path to preserve the /images/team/ part
-  const parts = path.split('/');
-  const filename = parts[parts.length - 1];
-  // Encode only the filename part
-  const encodedFilename = encodeURIComponent(filename);
-  // Reconstruct the path
-  parts[parts.length - 1] = encodedFilename;
-  return parts.join('/');
+// Helper function to get image paths
+const getImagePath = (name: string): string => {
+  // Map of team member names to their exact image filenames
+  const imageMap: Record<string, string> = {
+    "Abdugʻafurova Asal Shuxratjonovna": "Abdugʻafurova Asal Shuxratjonovna.jpg",
+    "Alibek Toshmuratov Abdisattor oʻgʻli": "Alibek Toshmuratov Abdisattor oʻgʻli.JPG",
+    "Asemay Asemova Maksudjanovna": "Asemay Asemova Maksudjanovna.jpg",
+    "Ashurov Javohir": "Ashurov Javohir.JPG",
+    "Ashurova Durdona": "Ashurova Durdona.JPG",
+    "Barotova Shaxrizoda Yòldosh qizi": "Barotova Shaxrizoda  Yòldosh qizi.jpg",
+    "Bobonazarova Binafsha Behzodovna": "Bobonazarova Binafsha Behzodovna.jpg",
+    "Bobumaratov Sardorbek Shuxrat o'g'li": "Bobumaratov Sardorbek Shuxrat o'g'li.jpg",
+    "Boburbek Panjiev Boboyorovich": "Boburbek Panjiev Boboyorovich.JPG",
+    "Boynazarova Shukrona Sheraliyevna": "Boynazarova Shukrona Sheraliyevna.jpg",
+    "Charos Mamayusupova Barot qizi": "Charos Mamayusupova Barot qizi.jpg",
+    "Choriyev Said Akhtam Sanjar o'g'li": "Choriyev Said Akhtam Sanjar o'g'li.JPG",
+    "Choriyeva Hurzoda Sanjar qizi": "Choriyeva Hurzoda Sanjar qizi.jpg",
+    "Eldorbek Safarov Muzaffarovich": "Eldorbek Safarov Muzaffarovich.jpg",
+    "Eshmamatov Asilbek Oybek oʻgʻli": "Eshmamatov Asilbek Oybek oʻgʻli.JPG",
+    "Eshmoʻminova Mushtariy Otabek qizi": "Eshmoʻminova Mushtariy Otabek qizi.jpg",
+    "Farhodova Fozila Uygunovna": "Farhodova Fozila Uygunovna.jpg",
+    "Farxodova Sora Uyg'unovna": "Farxodova Sora Uyg'unovna.jpg",
+    "Fayzullayev Ramziddin Demir o'g'li": "Fayzullayev Ramziddin Demir o'g'li.jpg",
+    "Firdavs Xudoyberdiyev Suxrob o'g'li": "Firdavs Xudoyberdiyev Suxrob o'g'li.jpg",
+    "Gulboyev Muhammadali Sultonbek òĝli": "Gulboyev Muhammadali Sultonbek òĝli.JPG",
+    "Islamov Alisher Yusupovich": "Islamov Alisher Yusupovich.JPG",
+    "Jo'rayev Dilnur Jasurovich": "Jo'rayev Dilnur Jasurovich.JPG",
+    "Jumayev Zuhriddin Ikromjon o'g'li": "Jumayev Zuhriddin Ikromjon o'g'li.jpg",
+    "Khurramov Asliddin Sharofutdin o'g'li": "Khurramov Asliddin.JPG",
+    "Ko'charov Muhammad Ziyodulla oʻgʻli": "Ko'charov Muhammad Ziyodulla oʻgʻli.jpg",
+    "Madiev Sardor Kenja o'g'li": "Madiev Sardor Kenja o'g'li.JPG",
+    "Murotov Manuchekhr Sulaymonkulovich": "Murotov Manuchekhr Sulaymonkulovich.JPG",
+    "Numonov Samandar Olimjon o'g'li": "Numonov Samandar Olimjon o'g'li.jpg",
+    "Nurbek Salomov Choriyevich": "Nurbek Salomov Choriyevich.jpg",
+    "Rizvonbek Hamroqulov Firo'z o'g'li": "Rizvonbek Hamroqulov Firo'z o'g'li.png",
+    "Ro'ziyev Mirsaid Baxtiyor o'g'li": "Ro'ziyev Mirsaid Baxtiyor o'g'li.jpg",
+    "Shohruh Tojiboyev Xoliyorovich": "Shohruh Tojiboyev Xoliyorovich.png",
+    "Tojinorova Sitora Muhammadi qizi": "Tojinorova Sitora Muhammadi qizi.jpg",
+    "Toshtemirova Muxlisa Akmal qizi": "Toshtemirova Muxlisa Akmal qizi.jpeg",
+    "To`rayev Sanjarbek  Musayevich": "To`rayev Sanjarbek  Musayevich.jpg",
+    "Usmonbek Abdukhalimov Eshberdiyevich": "Usmonbek Abdukhalimov Eshberdiyevich.jpg",
+    "Xayrullayeva Feruza Faxrullayevna": "Xayrullayeva Feruza Faxrullayevna.JPG",
+    "Xo'janov Asliddin Muzaffarovich": "Xo'janov Asliddin Muzaffarovich.jpg",
+    "Xo'janov Shohjahon Muzaffarovich": "Xo'janov Shohjahon Muzaffarovich.JPG",
+    "Ergashev Sardor": "Ergashev Sardor Azizjon o'g'li.JPG",
+    "Qahramon": "logo.png",
+    "Kholiyarov Javohir": "Ashurov Javohir.JPG" // Using similar image as fallback
+  };
+
+  // Normalize the name by trimming
+  const normalizedName = name.trim();
+  
+  // Get the base URL of the current server
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  
+  // Check if we have a direct mapping for this name
+  if (imageMap[normalizedName]) {
+    const imagePath = imageMap[normalizedName];
+    
+    // If it's the logo, return the direct path to the logo
+    if (imagePath === "logo.png") {
+      return `${baseUrl}/logo.png`;
+    }
+    
+    // Return the full path to the team member image
+    return `${baseUrl}/images/team/${imagePath}`;
+  }
+  
+  // Return default logo for members without photos
+  return `${baseUrl}/logo.png`;
 };
 
-// Helper function to check if an image exists and return the appropriate path
-const getImagePath = (name: string): string => {
-  // List of available images (filenames without extension)
+// Create a function to display all images from the team directory
+const getAllTeamImages = () => {
+  // Create additional team members for any images not already assigned
+  const additionalMembers: TeamMember[] = [];
+  let nextId = defaultTeamMembers.length + 1;
+  
+  // Check all available images and add any that aren't already assigned to a team member
   const availableImages = [
     "Abdugʻafurova Asal Shuxratjonovna",
     "Alibek Toshmuratov Abdisattor oʻgʻli",
+    "Asemay Asemova Maksudjanovna",
     "Ashurov Javohir",
-    "Barotova Shaxrizoda",
+    "Ashurova Durdona",
+    "Barotova Shaxrizoda  Yòldosh qizi",
     "Bobonazarova Binafsha Behzodovna",
+    "Bobumaratov Sardorbek Shuxrat o'g'li",
+    "Boburbek Panjiev Boboyorovich",
     "Boynazarova Shukrona Sheraliyevna",
     "Charos Mamayusupova Barot qizi",
+    "Choriyev Said Akhtam Sanjar o'g'li",
+    "Choriyeva Hurzoda Sanjar qizi",
+    "Eldorbek Safarov Muzaffarovich",
     "Eshmamatov Asilbek Oybek oʻgʻli",
     "Eshmoʻminova Mushtariy Otabek qizi",
     "Farhodova Fozila Uygunovna",
+    "Farxodova Sora Uyg'unovna",
     "Fayzullayev Ramziddin Demir o'g'li",
     "Firdavs Xudoyberdiyev Suxrob o'g'li",
     "Gulboyev Muhammadali Sultonbek òĝli",
+    "Islamov Alisher Yusupovich",
     "Jo'rayev Dilnur Jasurovich",
+    "Jumayev Zuhriddin Ikromjon o'g'li",
+    "Khurramov Asliddin",
+    "Ko'charov Muhammad Ziyodulla oʻgʻli",
     "Madiev Sardor Kenja o'g'li",
     "Murotov Manuchekhr Sulaymonkulovich",
+    "Numonov Samandar Olimjon o'g'li",
     "Nurbek Salomov Choriyevich",
     "Rizvonbek Hamroqulov Firo'z o'g'li",
     "Ro'ziyev Mirsaid Baxtiyor o'g'li",
+    "Shohruh Tojiboyev Xoliyorovich",
     "Tojinorova Sitora Muhammadi qizi",
+    "Toshtemirova Muxlisa Akmal qizi",
+    "To`rayev Sanjarbek  Musayevich",
+    "Usmonbek Abdukhalimov Eshberdiyevich",
     "Xayrullayeva Feruza Faxrullayevna",
+    "Xo'janov Asliddin Muzaffarovich",
     "Xo'janov Shohjahon Muzaffarovich"
   ];
-
-  // Check if the name is in the list of available images
-  const nameWithoutExtension = name.trim();
-  const hasImage = availableImages.some(img => 
-    img.toLowerCase() === nameWithoutExtension.toLowerCase()
-  );
-
-  if (hasImage) {
-    // Find the exact case-sensitive name from the available images
-    const exactName = availableImages.find(img => 
-      img.toLowerCase() === nameWithoutExtension.toLowerCase()
+  
+  availableImages.forEach(imageName => {
+    // Skip if this image is already assigned to a team member
+    const isAssigned = defaultTeamMembers.some(member => 
+      member.name.toLowerCase().includes(imageName.toLowerCase()) || 
+      imageName.toLowerCase().includes(member.name.toLowerCase())
     );
     
-    // Determine the extension (most are JPG but some are jpg or png)
-    let extension = ".JPG";
-    if (["Barotova Shaxrizoda", "Bobonazarova Binafsha Behzodovna", 
-         "Boynazarova Shukrona Sheraliyevna", "Charos Mamayusupova Barot qizi",
-         "Eshmoʻminova Mushtariy Otabek qizi", "Farhodova Fozila Uygunovna",
-         "Fayzullayev Ramziddin Demir o'g'li", "Firdavs Xudoyberdiyev Suxrob o'g'li",
-         "Nurbek Salomov Choriyevich", "Tojinorova Sitora Muhammadi qizi"].includes(exactName || "")) {
-      extension = ".jpg";
-    } else if (["Rizvonbek Hamroqulov Firo'z o'g'li"].includes(exactName || "")) {
-      extension = ".png";
+    if (!isAssigned) {
+      additionalMembers.push({
+        id: nextId++,
+        name: imageName,
+        role: "Team Member",
+        bio: `${imageName} contributes to our environmental initiatives.`,
+        image: getImagePath(imageName),
+        category: "Team Members"
+      });
     }
-    
-    return encodeImagePath(`/images/team/${exactName}${extension}`);
-  } else {
-    // Return default logo for members without photos
-    return "/logo.png";
-  }
+  });
+  
+  // Return combined list of default members plus any additional members from images
+  return [...defaultTeamMembers, ...additionalMembers];
 };
 
 // Updated team members with direct paths to uploaded images, organized by categories
@@ -101,7 +175,7 @@ const defaultTeamMembers: TeamMember[] = [
   {
     id: 2,
     name: "Farhodova Fozila Uygunovna",
-    role: "Founder",
+    role: "Co-Founder",
     bio: "Fozila is one of the founding members of EcoFuture.",
     image: getImagePath("Farhodova Fozila Uygunovna"),
     category: "Founders"
@@ -111,13 +185,21 @@ const defaultTeamMembers: TeamMember[] = [
   {
     id: 3,
     name: "Xo'janov Shohjahon Muzaffarovich",
-    role: "Logistics Coordinator",
+    role: "Head of Logistics Coordinators",
     bio: "Shohjahon coordinates logistics for our environmental projects.",
     image: getImagePath("Xo'janov Shohjahon Muzaffarovich"),
     category: "Logistics Coordinators"
   },
   {
     id: 4,
+    name: "Jumayev Zuhriddin Ikromjon o'g'li",
+    role: "Head of Logistics Coordinators",
+    bio: "Zuhriddin coordinates logistics for our environmental projects.",
+    image: getImagePath("Jumayev Zuhriddin Ikromjon o'g'li"),
+    category: "Logistics Coordinators"
+  },
+  {
+    id: 5,
     name: "Xayrullayeva Feruza Faxrullayevna",
     role: "Logistics Coordinator",
     bio: "Feruza manages logistics for our conservation initiatives.",
@@ -125,25 +207,65 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Logistics Coordinators"
   },
   {
-    id: 5,
+    id: 6,
+    name: "Kholiyarov Javohir",
+    role: "Logistics Coordinator",
+    bio: "Javohir handles logistics for our environmental programs.",
+    image: getImagePath("Kholiyarov Javohir"), // Using similar image as fallback
+    category: "Logistics Coordinators"
+  },
+  {
+    id: 7,
     name: "Eshmoʻminova Mushtariy Otabek qizi",
     role: "Logistics Coordinator",
     bio: "Mushtariy handles logistics for our environmental programs.",
     image: getImagePath("Eshmoʻminova Mushtariy Otabek qizi"),
     category: "Logistics Coordinators"
   },
+  {
+    id: 8,
+    name: "Roʻziyev Mirsaid Baxtiyor oʻgʻli",
+    role: "Logistics Coordinator",
+    bio: "Mirsaid manages logistics for our conservation initiatives.",
+    image: getImagePath("Ro'ziyev Mirsaid Baxtiyor o'g'li"),
+    category: "Logistics Coordinators"
+  },
+  {
+    id: 9,
+    name: "Farhodova Sora Uygunovna",
+    role: "Logistics Coordinator",
+    bio: "Sora handles logistics for our environmental programs.",
+    image: getImagePath("Farxodova Sora Uyg'unovna"),
+    category: "Logistics Coordinators"
+  },
+  {
+    id: 10,
+    name: "Choriyeva Hurzoda Sanjar qizi",
+    role: "Logistics Coordinator",
+    bio: "Hurzoda manages logistics for our conservation initiatives.",
+    image: getImagePath("Choriyeva Hurzoda Sanjar qizi"),
+    category: "Logistics Coordinators"
+  },
   
   // Finance Managers
   {
-    id: 6,
-    name: "Sanjar",
-    role: "Finance Manager",
-    bio: "Sanjar manages the financial aspects of our organization.",
-    image: getImagePath("Sanjar"),
+    id: 11,
+    name: "Bobomuratov Sardor Shuxrat o'g'li",
+    role: "Head of Finance Manager",
+    bio: "Sardor manages the financial aspects of our organization.",
+    image: getImagePath("Bobumaratov Sardorbek Shuxrat o'g'li"),
     category: "Finance Managers"
   },
   {
-    id: 7,
+    id: 12,
+    name: "Torayev Sanjarbek Musayevich",
+    role: "Finance Manager",
+    bio: "Sanjarbek oversees our financial planning and budgeting.",
+    image: getImagePath("To`rayev Sanjarbek  Musayevich"),
+    category: "Finance Managers"
+  },
+  {
+    id: 13,
     name: "Asemay Asemova Maksudjanovna",
     role: "Finance Manager",
     bio: "Asemay oversees our financial planning and budgeting.",
@@ -153,7 +275,15 @@ const defaultTeamMembers: TeamMember[] = [
   
   // Designers
   {
-    id: 8,
+    id: 14,
+    name: "Numonov Samandar Olimjon o'g'li",
+    role: "Head of Designers",
+    bio: "Samandar leads the design team for our environmental projects.",
+    image: getImagePath("Numonov Samandar Olimjon o'g'li"),
+    category: "Designers"
+  },
+  {
+    id: 15,
     name: "Fayzullayev Ramziddin Demir oʻgʻli",
     role: "Designer",
     bio: "Ramziddin creates visual designs for our campaigns and materials.",
@@ -161,7 +291,15 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Designers"
   },
   {
-    id: 9,
+    id: 16,
+    name: "Islamov Alisher Yusupovich",
+    role: "Designer",
+    bio: "Alisher designs visual content for our environmental initiatives.",
+    image: getImagePath("Islamov Alisher Yusupovich"),
+    category: "Designers"
+  },
+  {
+    id: 17,
     name: "Shohruh Tojiboyev Xoliyorovich",
     role: "Designer",
     bio: "Shohruh designs visual content for our environmental initiatives.",
@@ -169,23 +307,15 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Designers"
   },
   {
-    id: 10,
-    name: "Numonov Samandar Olimjon o'g'li",
+    id: 18,
+    name: "Usmonbek Abdukhalimov Eshberdiyevich",
     role: "Designer",
-    bio: "Samandar creates graphics and visual materials for our projects.",
-    image: getImagePath("Numonov Samandar Olimjon o'g'li"),
+    bio: "Usmonbek designs visual content for our environmental campaigns.",
+    image: getImagePath("Usmonbek Abdukhalimov Eshberdiyevich"),
     category: "Designers"
   },
   {
-    id: 11,
-    name: "Usmon",
-    role: "Designer",
-    bio: "Usmon designs visual content for our environmental campaigns.",
-    image: getImagePath("Usmon"),
-    category: "Designers"
-  },
-  {
-    id: 12,
+    id: 19,
     name: "Firdavs Xudoyberdiyev Suxrob oʻgʻli",
     role: "Designer",
     bio: "Firdavs creates designs for our conservation awareness materials.",
@@ -193,41 +323,41 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Designers"
   },
   {
-    id: 13,
-    name: "Gulboyev Muhammadali Sultonbek oʻgʻli",
+    id: 20,
+    name: "Ko'charov Muhammad Ziyodulla oʻgʻli",
     role: "Designer",
-    bio: "Muhammadali designs visual content for our environmental initiatives.",
-    image: getImagePath("Gulboyev Muhammadali Sultonbek òĝli"),
+    bio: "Muhammad designs visual content for our environmental initiatives.",
+    image: getImagePath("Ko'charov Muhammad Ziyodulla oʻgʻli"),
     category: "Designers"
   },
   
   // Content Makers
   {
-    id: 14,
-    name: "Qahramon",
-    role: "Content Maker",
-    bio: "Qahramon creates content for our environmental awareness campaigns.",
-    image: getImagePath("Qahramon"),
-    category: "Content Makers"
-  },
-  {
-    id: 15,
+    id: 21,
     name: "Rizvonbek Hamroqulov Firoʻz oʻgʻli",
-    role: "Content Maker",
-    bio: "Rizvonbek produces content for our conservation initiatives.",
+    role: "Head of Content Maker",
+    bio: "Rizvonbek leads the content creation for our conservation initiatives.",
     image: getImagePath("Rizvonbek Hamroqulov Firo'z o'g'li"),
     category: "Content Makers"
   },
   {
-    id: 16,
-    name: "Roʻziyev Mirsaid Baxtiyor oʻgʻli",
+    id: 22,
+    name: "Qahramon",
     role: "Content Maker",
-    bio: "Mirsaid creates content for our environmental programs.",
-    image: getImagePath("Ro'ziyev Mirsaid Baxtiyor o'g'li"),
+    bio: "Qahramon creates content for our environmental awareness campaigns.",
+    image: getImagePath("Qahramon"), // Using default logo
     category: "Content Makers"
   },
   {
-    id: 17,
+    id: 23,
+    name: "Ergashev Sardor",
+    role: "Content Maker",
+    bio: "Sardor creates content for our environmental awareness campaigns.",
+    image: getImagePath("Ergashev Sardor"),
+    category: "Content Makers"
+  },
+  {
+    id: 24,
     name: "Murotov Manuchekhr Sulaymonkulovich",
     role: "Content Maker",
     bio: "Manuchekhr produces content for our conservation awareness campaigns.",
@@ -235,7 +365,7 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Content Makers"
   },
   {
-    id: 18,
+    id: 25,
     name: "Charos Mamayusupova Barot qizi",
     role: "Content Maker",
     bio: "Charos creates content for our environmental initiatives.",
@@ -243,7 +373,7 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Content Makers"
   },
   {
-    id: 19,
+    id: 26,
     name: "Nurbek Salomov Choriyevich",
     role: "Content Maker",
     bio: "Nurbek produces content for our conservation programs.",
@@ -253,7 +383,7 @@ const defaultTeamMembers: TeamMember[] = [
   
   // Administration & Special Roles
   {
-    id: 20,
+    id: 27,
     name: "Alibek Toshmuratov Abdisattor oʻgʻli",
     role: "Admin",
     bio: "Alibek manages administrative functions for our organization.",
@@ -261,17 +391,33 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Administration & Special Roles"
   },
   {
-    id: 21,
-    name: "Bobur",
+    id: 28,
+    name: "Khurramov Asliddin Sharofutdin o'g'li",
+    role: "Head of Mobilographs",
+    bio: "Asliddin leads the mobile photography team for our environmental projects.",
+    image: getImagePath("Khurramov Asliddin Sharofutdin o'g'li"),
+    category: "Administration & Special Roles"
+  },
+  {
+    id: 29,
+    name: "Boburbek Panjiev Boboyorovich",
     role: "Mobilograph",
-    bio: "Bobur handles mobile photography for our environmental projects.",
-    image: getImagePath("Bobur"),
+    bio: "Boburbek handles mobile photography for our environmental projects.",
+    image: getImagePath("Boburbek Panjiev Boboyorovich"),
     category: "Administration & Special Roles"
   },
   
   // Volunteers
   {
-    id: 22,
+    id: 30,
+    name: "Barotova Shaxrizoda Yòldosh qizi",
+    role: "Head of Volunteers",
+    bio: "Shaxrizoda leads and coordinates our volunteer programs.",
+    image: getImagePath("Barotova Shaxrizoda  Yòldosh qizi"),
+    category: "Volunteers"
+  },
+  {
+    id: 31,
     name: "Eshmamatov Asilbek Oybek oʻgʻli",
     role: "Volunteer",
     bio: "Asilbek volunteers for our environmental conservation initiatives.",
@@ -279,7 +425,7 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Volunteers"
   },
   {
-    id: 23,
+    id: 32,
     name: "Ashurov Javohir",
     role: "Volunteer",
     bio: "Javohir volunteers for our conservation programs.",
@@ -287,7 +433,7 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Volunteers"
   },
   {
-    id: 24,
+    id: 33,
     name: "Joʻrayev Dilnur Jasurovich",
     role: "Volunteer",
     bio: "Dilnur volunteers for our environmental initiatives.",
@@ -295,7 +441,7 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Volunteers"
   },
   {
-    id: 25,
+    id: 34,
     name: "Abdugʻafurova Asal Shuxratjonovna",
     role: "Volunteer",
     bio: "Asal volunteers for our conservation awareness campaigns.",
@@ -303,7 +449,7 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Volunteers"
   },
   {
-    id: 26,
+    id: 35,
     name: "Tojinorova Sitora Muhammadi qizi",
     role: "Volunteer",
     bio: "Sitora volunteers for our environmental programs.",
@@ -311,7 +457,7 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Volunteers"
   },
   {
-    id: 27,
+    id: 36,
     name: "Bobonazarova Binafsha Behzodovna",
     role: "Volunteer",
     bio: "Binafsha volunteers for our conservation initiatives.",
@@ -319,7 +465,7 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Volunteers"
   },
   {
-    id: 28,
+    id: 37,
     name: "Choriyev Said Akhtam Sanjar o'g'li",
     role: "Volunteer",
     bio: "Said volunteers for our environmental programs.",
@@ -327,19 +473,43 @@ const defaultTeamMembers: TeamMember[] = [
     category: "Volunteers"
   },
   {
-    id: 29,
-    name: "Barotova Shaxrizoda Yòldosh qizi",
-    role: "Head of Volunteers",
-    bio: "Shaxrizoda leads and coordinates our volunteer programs.",
-    image: getImagePath("Barotova Shaxrizoda"),
-    category: "Volunteers"
-  },
-  {
-    id: 30,
+    id: 38,
     name: "Boynazarova Shukrona Sheraliyevna",
     role: "Volunteer",
     bio: "Shukrona volunteers for our environmental conservation initiatives.",
     image: getImagePath("Boynazarova Shukrona Sheraliyevna"),
+    category: "Volunteers"
+  },
+  {
+    id: 39,
+    name: "Gulboyev Muhammadali Sultonbek oʻgʻli",
+    role: "Volunteer",
+    bio: "Muhammadali volunteers for our environmental initiatives.",
+    image: getImagePath("Gulboyev Muhammadali Sultonbek òĝli"),
+    category: "Volunteers"
+  },
+  {
+    id: 40,
+    name: "Xo'janov Asliddin Muzaffarovich",
+    role: "Volunteer",
+    bio: "Asliddin volunteers for our conservation programs.",
+    image: getImagePath("Xo'janov Asliddin Muzaffarovich"),
+    category: "Volunteers"
+  },
+  {
+    id: 41,
+    name: "Eldorbek Safarov Muzaffarovich",
+    role: "Volunteer",
+    bio: "Eldorbek volunteers for our environmental initiatives.",
+    image: getImagePath("Eldorbek Safarov Muzaffarovich"),
+    category: "Volunteers"
+  },
+  {
+    id: 42,
+    name: "Toshtemirova Muxlisa Akmal qizi",
+    role: "Volunteer",
+    bio: "Muxlisa volunteers for our conservation awareness campaigns.",
+    image: getImagePath("Toshtemirova Muxlisa Akmal qizi"),
     category: "Volunteers"
   }
 ];
@@ -353,22 +523,28 @@ export const TeamProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load team members from localStorage or use default
+    // Simulate loading from an API or database
     const loadTeamMembers = () => {
-      try {
-        const savedTeamMembers = localStorage.getItem('teamMembers');
-        if (savedTeamMembers) {
-          setTeamMembers(JSON.parse(savedTeamMembers));
-        } else {
-          setTeamMembers(defaultTeamMembers);
-          localStorage.setItem('teamMembers', JSON.stringify(defaultTeamMembers));
+      setIsLoading(true);
+      
+      // Get all team members including any from unassigned images
+      const allTeamMembers = getAllTeamImages();
+      
+      // Check local storage for any saved updates
+      const savedTeam = localStorage.getItem('teamMembers');
+      if (savedTeam) {
+        try {
+          const parsedTeam = JSON.parse(savedTeam);
+          setTeamMembers(parsedTeam);
+        } catch (error) {
+          console.error('Error parsing saved team data:', error);
+          setTeamMembers(allTeamMembers);
         }
-      } catch (error) {
-        console.error("Error loading team members:", error);
-        setTeamMembers(defaultTeamMembers);
-      } finally {
-        setIsLoading(false);
+      } else {
+        setTeamMembers(allTeamMembers);
       }
+      
+      setIsLoading(false);
     };
 
     loadTeamMembers();

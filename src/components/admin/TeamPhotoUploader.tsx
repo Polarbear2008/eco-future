@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TeamMember } from "@/contexts/TeamContext";
 import { toast } from "@/components/ui/use-toast";
+import { Upload, Image as ImageIcon } from "lucide-react";
 
 interface TeamPhotoUploaderProps {
-  teamMember: TeamMember;
+  memberId: number;
+  currentImage: string;
   onPhotoUpdate: (id: number, imageUrl: string) => void;
 }
 
-const TeamPhotoUploader = ({ teamMember, onPhotoUpdate }: TeamPhotoUploaderProps) => {
+const TeamPhotoUploader = ({ memberId, currentImage, onPhotoUpdate }: TeamPhotoUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -44,19 +45,25 @@ const TeamPhotoUploader = ({ teamMember, onPhotoUpdate }: TeamPhotoUploaderProps
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Update the team member's photo
-      onPhotoUpdate(teamMember.id, imageUrl);
+      onPhotoUpdate(memberId, imageUrl);
       
       // Show success message
       toast({
         title: "Success!",
-        description: `Photo for ${teamMember.name} has been updated. Please manually copy the image to /public/images/team/${fileName}`,
-        variant: "default",
+        description: (
+          <div>
+            <p>Image selected successfully.</p>
+            <p className="text-xs mt-1 font-mono bg-gray-100 p-1 rounded">
+              Filename: {fileName}
+            </p>
+          </div>
+        ),
       });
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("Error uploading image:", error);
       toast({
-        title: "Upload Failed",
-        description: "Could not process the image. Please try again.",
+        title: "Upload failed",
+        description: "There was a problem uploading your image. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -64,52 +71,59 @@ const TeamPhotoUploader = ({ teamMember, onPhotoUpdate }: TeamPhotoUploaderProps
     }
   };
 
-  // Determine which image to display
-  const displayImage = previewUrl || teamMember.image;
+  const displayImage = previewUrl || currentImage;
 
   return (
-    <Card className="overflow-hidden">
-      <div className="aspect-square w-full overflow-hidden bg-gray-100">
-        <img 
-          src={displayImage} 
-          alt={teamMember.name}
-          className="h-full w-full object-cover transition-all hover:scale-105"
-          onError={(e) => {
-            // Fallback to logo if image fails to load
-            (e.target as HTMLImageElement).src = "/logo.png";
-          }}
-        />
+    <div className="w-full">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center">
+          <ImageIcon className="h-4 w-4 mr-2 text-gray-500" />
+          <span className="text-sm font-medium">Team Member Photo</span>
+        </div>
       </div>
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg">{teamMember.name}</h3>
-        <p className="text-sm text-gray-500">{teamMember.role}</p>
-      </CardContent>
-      <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <div className="w-full">
-          {isUploading ? (
-            <Button disabled className="w-full bg-amber-600">
-              Processing...
-            </Button>
+      
+      <div className="flex flex-col items-center space-y-4">
+        {/* Image preview */}
+        <div className="w-full aspect-square bg-gray-100 rounded-md overflow-hidden flex items-center justify-center">
+          {displayImage && !displayImage.includes('logo.png') ? (
+            <img 
+              src={previewUrl || currentImage} 
+              alt="Team member" 
+              className="w-full h-full object-cover"
+            />
           ) : (
-            <>
-              <input
-                type="file"
-                accept="image/*"
-                id={`photo-upload-${teamMember.id}`}
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <label 
-                htmlFor={`photo-upload-${teamMember.id}`}
-                className="cursor-pointer inline-flex items-center justify-center w-full rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-              >
-                Update Photo
-              </label>
-            </>
+            <div className="text-gray-400 flex flex-col items-center justify-center h-full">
+              <ImageIcon className="h-12 w-12 mb-2" />
+              <span className="text-sm">No image selected</span>
+            </div>
           )}
         </div>
-      </CardFooter>
-    </Card>
+        
+        {/* Upload button */}
+        <div className="w-full">
+          <label className="w-full">
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleFileChange} 
+              className="hidden" 
+              disabled={isUploading}
+            />
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center justify-center cursor-pointer"
+              disabled={isUploading}
+              asChild
+            >
+              <div>
+                <Upload className="h-4 w-4 mr-2" />
+                {isUploading ? 'Uploading...' : 'Select New Photo'}
+              </div>
+            </Button>
+          </label>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -22,6 +22,9 @@ import TestProjectsPage from "./pages/TestProjectsPage";
 import SupabaseProjectDebug from "./pages/SupabaseProjectDebug";
 import SupabaseDebug from './pages/SupabaseDebug';
 import BlogTestPage from './pages/BlogTestPage';
+import TestImagePage from './pages/TestImagePage';
+import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Admin Pages
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
@@ -35,6 +38,7 @@ import TestUploadPage from "./pages/admin/TestUploadPage";
 import { AdminProvider } from "./contexts/AdminContext";
 import { PublicProvider } from "./contexts/PublicContext";
 import { TeamProvider } from "./contexts/TeamContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Animations
 import { MouseTrail, CustomLoader } from "./components/animations";
@@ -72,47 +76,53 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <TeamProvider>
-            <AdminProvider>
-              <PublicProvider>
-                <MouseTrail color="rgba(72, 187, 120, 0.4)" size={8} trailLength={12} />
-                
-                <Routes>
-                  <Route path="/" element={<Layout />}>
-                    <Route index element={<HomePage />} />
-                    <Route path="about" element={<AboutPage />} />
-                    <Route path="projects" element={<ProjectsPage />} />
-                    <Route path="projects/:id" element={<ProjectDetailPage />} />
-                    <Route path="get-involved" element={<GetInvolvedPage />} />
-                    <Route path="blog" element={<BlogPage />} />
-                    <Route path="blog/:id" element={<BlogPostPage />} />
-                    <Route path="contact" element={<ContactPage />} />
-                    <Route path="test" element={<TestPage />} />
-                    <Route path="volunteer-test" element={<VolunteerTest />} />
-                    <Route path="supabase-test" element={<SupabaseTest />} />
-                    <Route path="volunteer-submission-test" element={<VolunteerSubmissionTest />} />
-                    <Route path="test-projects" element={<TestProjectsPage />} />
-                    <Route path="supabase-project-debug" element={<SupabaseProjectDebug />} />
-                    <Route path="supabase-debug" element={<SupabaseDebug />} />
-                    <Route path="blog-test" element={<BlogTestPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
+          <AuthProvider>
+            <TeamProvider>
+              <AdminProvider>
+                <PublicProvider>
+                  <MouseTrail color="rgba(72, 187, 120, 0.4)" size={8} trailLength={12} />
                   
-                  {/* Admin Routes */}
-                  <Route path="/admin/*" element={
-                    <Routes>
-                      <Route path="/" element={<AdminDashboardPage />} />
-                      <Route path="/blogs" element={<BlogManagementPage />} />
-                      <Route path="/projects" element={<ProjectManagementPage />} />
-                      <Route path="/volunteer-list" element={<VolunteerListPage />} />
-                      <Route path="/team" element={<TeamManagementPage />} />
-                      <Route path="/test-upload" element={<TestUploadPage />} />
-                    </Routes>
-                  } />
-                </Routes>
-              </PublicProvider>
-            </AdminProvider>
-          </TeamProvider>
+                  <Routes>
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<HomePage />} />
+                      <Route path="about" element={<AboutPage />} />
+                      <Route path="projects" element={<ProjectsPage />} />
+                      <Route path="projects/:id" element={<ProjectDetailPage />} />
+                      <Route path="get-involved" element={<GetInvolvedPage />} />
+                      <Route path="blog" element={<BlogPage />} />
+                      <Route path="blog/:id" element={<BlogPostPage />} />
+                      <Route path="contact" element={<ContactPage />} />
+                      <Route path="test" element={<TestPage />} />
+                      <Route path="volunteer-test" element={<VolunteerTest />} />
+                      <Route path="supabase-test" element={<SupabaseTest />} />
+                      <Route path="volunteer-submission-test" element={<VolunteerSubmissionTest />} />
+                      <Route path="test-projects" element={<TestProjectsPage />} />
+                      <Route path="supabase-project-debug" element={<SupabaseProjectDebug />} />
+                      <Route path="supabase-debug" element={<SupabaseDebug />} />
+                      <Route path="blog-test" element={<BlogTestPage />} />
+                      <Route path="test-images" element={<TestImagePage />} />
+                      <Route path="login" element={<LoginPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                    
+                    {/* Admin Routes */}
+                    <Route path="/admin/*" element={
+                      <ProtectedRoute>
+                        <Routes>
+                          <Route path="/" element={<AdminDashboardPage />} />
+                          <Route path="/blogs" element={<BlogManagementPage />} />
+                          <Route path="/projects" element={<ProjectManagementPage />} />
+                          <Route path="/volunteer-list" element={<VolunteerListPage />} />
+                          <Route path="/team" element={<TeamManagementPage />} />
+                          <Route path="/test-upload" element={<TestUploadPage />} />
+                        </Routes>
+                      </ProtectedRoute>
+                    } />
+                  </Routes>
+                </PublicProvider>
+              </AdminProvider>
+            </TeamProvider>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
